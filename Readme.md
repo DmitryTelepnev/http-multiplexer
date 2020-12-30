@@ -1,5 +1,7 @@
 # Http Multiplexer
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/DmitryTelepnev/http-multiplexer)](https://goreportcard.com/report/github.com/DmitryTelepnev/http-multiplexer)
+
 see [conditions](Conditions.md)
 
 ## Requirements
