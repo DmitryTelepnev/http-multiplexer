@@ -28,40 +28,47 @@ func (m *Multiplexer) SendRequests(urls []string) (map[string]string, error) {
 	defer multiplexCancel()
 
 	var wg sync.WaitGroup
-	wg.Add(len(urls))
 
+	loop:
 	for _, url := range urls {
-		go func(url string) {
-			defer wg.Done()
-
+		select {
+		case <-multiplexContext.Done():
+			log.Println("breaking the urls loop")
+			break loop
+		default:
 			limiter <- struct{}{}
-			defer func() {
-				<- limiter
-			}()
+			wg.Add(1)
 
-			log.Printf("process url %s", url)
+			go func(url string) {
+				defer wg.Done()
+				defer func() {
+					<- limiter
+				}()
 
-			ctx, cancel := context.WithTimeout(multiplexContext, m.cfg.RequestTimeOut)
-			data, err := m.client.Send(ctx, url)
+				log.Printf("process url %s", url)
 
-			if err != nil {
-				mutex.Lock()
-				if requestErr == nil {
-					requestErr = err
+				ctx, cancel := context.WithTimeout(multiplexContext, m.cfg.RequestTimeOut)
+				data, err := m.client.Send(ctx, url)
+
+				if err != nil {
+					mutex.Lock()
+					if requestErr == nil {
+						requestErr = err
+					}
+					mutex.Unlock()
+
+					cancel()
+					multiplexCancel()
+					return
 				}
+
+				log.Printf("successfully processed url %s", url)
+
+				mutex.Lock()
+				urlsData[url] = string(data)
 				mutex.Unlock()
-
-				cancel()
-				multiplexCancel()
-				return
-			}
-
-			log.Printf("successfully processed url %s", url)
-
-			mutex.Lock()
-			urlsData[url] = string(data)
-			mutex.Unlock()
-		}(url)
+			}(url)
+		}
 	}
 
 	wg.Wait()
