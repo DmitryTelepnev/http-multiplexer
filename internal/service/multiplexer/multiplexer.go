@@ -1,11 +1,12 @@
 package multiplexer
 
 import (
-	"github.com/DmitryTelepnev/http-multiplexer/internal/infrastructure/config"
-	"github.com/DmitryTelepnev/http-multiplexer/internal/service/request"
 	"context"
 	"log"
 	"sync"
+
+	"github.com/DmitryTelepnev/http-multiplexer/internal/infrastructure/config"
+	"github.com/DmitryTelepnev/http-multiplexer/internal/service/request"
 )
 
 type Multiplexer struct {
@@ -29,7 +30,7 @@ func (m *Multiplexer) SendRequests(urls []string) (map[string]string, error) {
 
 	var wg sync.WaitGroup
 
-	loop:
+loop:
 	for _, url := range urls {
 		select {
 		case <-multiplexContext.Done():
@@ -42,12 +43,13 @@ func (m *Multiplexer) SendRequests(urls []string) (map[string]string, error) {
 			go func(url string) {
 				defer wg.Done()
 				defer func() {
-					<- limiter
+					<-limiter
 				}()
 
 				log.Printf("process url %s", url)
 
 				ctx, cancel := context.WithTimeout(multiplexContext, m.cfg.RequestTimeOut)
+				defer cancel()
 				data, err := m.client.Send(ctx, url)
 
 				if err != nil {
@@ -57,7 +59,6 @@ func (m *Multiplexer) SendRequests(urls []string) (map[string]string, error) {
 					}
 					mutex.Unlock()
 
-					cancel()
 					multiplexCancel()
 					return
 				}

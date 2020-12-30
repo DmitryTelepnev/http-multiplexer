@@ -12,7 +12,7 @@ type handler struct {
 }
 
 func NewHandler(onShutdown func() error) *handler {
-	signalChan := make(chan os.Signal)
+	signalChan := make(chan os.Signal, 1)
 	OSSignal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
 	return &handler{

@@ -1,12 +1,13 @@
 package handler
 
 import (
-	"github.com/DmitryTelepnev/http-multiplexer/internal/infrastructure/config"
-	"github.com/DmitryTelepnev/http-multiplexer/internal/service/multiplexer"
 	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
+
+	"github.com/DmitryTelepnev/http-multiplexer/internal/infrastructure/config"
+	"github.com/DmitryTelepnev/http-multiplexer/internal/service/multiplexer"
 )
 
 type MultiplexHandler struct {
