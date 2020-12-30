@@ -71,6 +71,14 @@ func (h *MultiplexHandler) ServeHTTP(writer http.ResponseWriter, request *http.R
 		return
 	}
 
+	if len(urls) == 0 {
+		writer.WriteHeader(http.StatusForbidden)
+		_ = json.NewEncoder(writer).Encode(Response{
+			Msg: "empty urls list",
+		})
+		return
+	}
+
 	urlsData, multiplexErr := h.multiplexer.SendRequests(urls)
 	msg := "Ok"
 	if multiplexErr != nil {
