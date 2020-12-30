@@ -1,0 +1,12 @@
+logger:
+  level: debug
+k8s:
+  port: 8080
+  healthEndpoint: /health
+  metricEndpoint: /metric
+multiplexer:
+  allRequestsTimeOut: 10s
+  maxOneTimeRequests: 4
+  requestTimeOut: 1s
+  maxUrlsInRequest: 20
+  maxActiveConnections: 100
