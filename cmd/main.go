@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/DmitryTelepnev/http-multiplexer/internal/infrastructure/config"
 	"github.com/DmitryTelepnev/http-multiplexer/internal/infrastructure/handler"
@@ -24,7 +25,8 @@ func main() {
 	httpClient := request.NewHttpClient()
 	httpMultiplexer := multiplexer.NewMultiplexer(cfg.Multiplexer, httpClient)
 
-	multiplexHandler := handler.NewMultiplexHandler(&cfg.Multiplexer, httpMultiplexer)
+	var wg sync.WaitGroup
+	multiplexHandler := handler.NewMultiplexHandler(&cfg.Multiplexer, &wg, httpMultiplexer)
 	handlerWithRequestLimiter := handler.WithRequestLimiter(multiplexHandler, cfg.Multiplexer.MaxActiveConnections)
 	http.Handle("/", metrics.CollectHTTP(handlerWithRequestLimiter))
 
@@ -37,6 +39,7 @@ func main() {
 
 	signalHandler := signal.NewHandler(func() error {
 		// graceful stop with resource closing
+		wg.Wait()
 		log.Println("Gracefully stopped")
 		return nil
 	})

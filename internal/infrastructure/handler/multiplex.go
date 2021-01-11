@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	"github.com/DmitryTelepnev/http-multiplexer/internal/infrastructure/config"
 	"github.com/DmitryTelepnev/http-multiplexer/internal/service/multiplexer"
@@ -10,12 +11,14 @@ import (
 
 type MultiplexHandler struct {
 	cfg         *config.Multiplexer
+	wg          *sync.WaitGroup
 	multiplexer *multiplexer.Multiplexer
 }
 
-func NewMultiplexHandler(cfg *config.Multiplexer, multiplex *multiplexer.Multiplexer) *MultiplexHandler {
+func NewMultiplexHandler(cfg *config.Multiplexer, wg *sync.WaitGroup, multiplex *multiplexer.Multiplexer) *MultiplexHandler {
 	return &MultiplexHandler{
 		cfg:         cfg,
+		wg:          wg,
 		multiplexer: multiplex,
 	}
 }
@@ -26,6 +29,9 @@ type Response struct {
 }
 
 func (h *MultiplexHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	h.wg.Add(1)
+	defer h.wg.Done()
+
 	writer.Header().Add("Content-type", "application/json")
 
 	if request.Method != http.MethodPost {
