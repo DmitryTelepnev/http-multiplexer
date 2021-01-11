@@ -32,12 +32,12 @@ func (m *Multiplexer) SendRequests(urls []string) (map[string]string, error) {
 
 loop:
 	for _, url := range urls {
+		limiter <- struct{}{}
 		select {
 		case <-multiplexContext.Done():
 			log.Println("breaking the urls loop")
 			break loop
 		default:
-			limiter <- struct{}{}
 			wg.Add(1)
 
 			go func(url string) {
